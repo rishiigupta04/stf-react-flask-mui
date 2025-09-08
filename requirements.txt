@@ -1,0 +1,16 @@
+streamlit
+selenium
+scikit-learn
+lightgbm
+shap
+opencv-python
+Pillow
+imagehash
+pytesseract
+beautifulsoup4
+rapidfuzz
+requests
+ollama
+matplotlib
+numpy
+pandas

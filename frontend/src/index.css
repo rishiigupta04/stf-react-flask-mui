@@ -1,0 +1,53 @@
+/* Global dark overrides to ensure all text / placeholders render light on the dark background */
+:root{
+  --bg: #071126;
+  --paper: #0f1724;
+  --text: #e6eef8;
+  --muted: rgba(230,238,248,0.6);
+}
+
+html, body, #root {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  min-height: 100%;
+  margin: 0;
+}
+
+/* Native inputs and placeholders */
+input, textarea, select {
+  color: var(--text) !important;
+  background: transparent !important;
+}
+
+::placeholder {
+  color: rgba(230,238,248,0.5) !important;
+}
+
+/* MUI specific classes (safety net) */
+.MuiInputBase-input, .MuiOutlinedInput-input {
+  color: var(--text) !important;
+}
+
+.MuiPaper-root {
+  background-image: none !important;
+  background-color: var(--paper) !important;
+  color: var(--text) !important;
+}
+
+/* Aggressive MUI-wide selectors to ensure dark theme text everywhere */
+.MuiTypography-root, .MuiButton-root, .MuiAppBar-root, .MuiToolbar-root, .MuiPaper-root {
+  color: var(--text) !important;
+}
+
+.MuiInputLabel-root, .MuiFormLabel-root, .MuiInputBase-root, .MuiOutlinedInput-root, .MuiInputBase-input {
+  color: var(--text) !important;
+}
+
+.MuiFormHelperText-root {
+  color: var(--muted) !important;
+}
+
+/* Ensure links inside nav/buttons are visible */
+a, a:visited {
+  color: inherit !important;
+}

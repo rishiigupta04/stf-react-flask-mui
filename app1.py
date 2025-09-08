@@ -8,12 +8,14 @@ from rapidfuzz import process
 from urllib.parse import urlparse
 import socket
 import requests
-import os
 
+# ---------- Config ----------
+import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # current file location
 BRANDS_FOLDER = os.path.join(BASE_DIR, "Brands")
-USER_FOLDER   = os.path.join(BASE_DIR,"User")
+USER_FOLDER   = os.path.join(BASE_DIR, "User")
+
 
 os.makedirs(BRANDS_FOLDER, exist_ok=True)
 os.makedirs(USER_FOLDER,   exist_ok=True)
@@ -221,14 +223,11 @@ def fuzzy_match_brand(domain):
         return None
     best = process.extractOne(domain, brands)
     if not best:
-        print(f"[DEBUG] No fuzzy match found for domain '{domain}' in brands {brands}")
         return None
     best_match, score, _ = best
-    print(f"[DEBUG] Fuzzy match for domain '{domain}': '{best_match}' (score={score})")
-    if score >= 60:  # Lowered threshold for more flexible matching
+    if score >= 75:
         print(f"🔍 Fuzzy matched '{domain}' → '{best_match}' (score={round(score,1)})")
         return best_match
-    print(f"[DEBUG] Fuzzy match score {score} below threshold for '{domain}'")
     return None
 
 # ---------- Explainability ----------
@@ -277,165 +276,58 @@ def check_website(user_input, lgbm_score=None, llm_score=None, ui_weight=0.4, lg
             user_img = user_input.replace("file://", "") if user_input.lower().startswith("file://") else user_input
             ui_score, ui_details, ui_weights = website_similarity(ref_img, user_img)
         else:
-            st.warning(f"⚠️ No reference found for '{matched}' in dataset.")
+            st.warning(f"⚠ No reference found for '{matched}' in dataset.")
 
     # --------- Case 2: URL input ---------
     else:
         url = normalize_url(user_input)
         domain = extract_domain(url)
-        print(f"[DEBUG] Extracted domain: {domain}")
         if not domain:
-            print("[DEBUG] Invalid URL (cannot extract domain). Returning fallback result.")
-            return {
-                "brand": None,
-                "reference_image": None,
-                "user_screenshot": None,
-                "score": None,
-                "details": {"message": "Invalid URL (cannot extract domain)."},
-                "weights": None
-            }
+            st.error("❌ Invalid URL (cannot extract domain).")
+            return None
 
         if not check_dns(url):
-            print(f"[DEBUG] DNS resolution failed for '{url}'. Returning fallback result.")
-            return {
-                "brand": domain,
-                "reference_image": None,
-                "user_screenshot": None,
-                "score": None,
-                "details": {"message": f"DNS resolution failed for '{url}'."},
-                "weights": None
-            }
+            st.error(f"❌ DNS resolution failed for '{url}'.")
+            return None
         if not check_http(url):
-            print(f"[DEBUG] '{url}' not reachable (HTTP check failed). Returning fallback result.")
-            return {
-                "brand": domain,
-                "reference_image": None,
-                "user_screenshot": None,
-                "score": None,
-                "details": {"message": f"'{url}' not reachable (HTTP check failed)."},
-                "weights": None
-            }
+            st.error(f"❌ '{url}' not reachable (HTTP check failed).")
+            return None
 
         brand_name = domain
         ref_img = os.path.join(BRANDS_FOLDER, f"{brand_name}_ref.png")
         if not os.path.exists(ref_img):
-            print(f"[DEBUG] No exact reference image for '{brand_name}'. Trying fuzzy match...")
-            fuzzy = fuzzy_match_brand(domain)
-            print(f"[DEBUG] Fuzzy match result: {fuzzy}")
-            if fuzzy:
-                brand_name = fuzzy
+            brand_name = fuzzy_match_brand(domain)
+            if brand_name:
                 ref_img = os.path.join(BRANDS_FOLDER, f"{brand_name}_ref.png")
-                print(f"[DEBUG] Using fuzzy matched reference image: {ref_img}")
-            else:
-                print(f"[DEBUG] No fuzzy match found for '{domain}'. Proceeding without reference image.")
 
         if os.path.exists(ref_img):
-            user_img = os.path.join(USER_FOLDER, f"{domain}_user.png")
-            print(f"[DEBUG] Taking screenshot for user_img: {user_img}")
-            # If a screenshot already exists from previous runs, reuse it first
-            if os.path.exists(user_img):
-                print(f"[DEBUG] Found existing user screenshot at {user_img}, reusing it.")
-                saved = user_img
-            else:
-                saved = capture_viewport_screenshot(url, user_img, retries=1)
+            user_img = os.path.join(USER_FOLDER, f"{brand_name}_user.png")
+            saved = capture_viewport_screenshot(url, user_img, retries=1)
             if saved:
-                print(f"[DEBUG] Screenshot saved. Running similarity...")
                 ui_score, ui_details, ui_weights = website_similarity(ref_img, user_img)
-                if ui_score is not None:
-                    print(f"[DEBUG] Similarity score: {ui_score}")
-                    return {
-                        "brand": brand_name,
-                        "reference_image": ref_img,
-                        "user_screenshot": user_img,
-                        "score": ui_score,
-                        "details": ui_details,
-                        "weights": ui_weights
-                    }
-                else:
-                    print(f"[DEBUG] Similarity analysis failed for '{brand_name}'. Returning structured result.")
-                    return {
-                        "brand": brand_name,
-                        "reference_image": ref_img,
-                        "user_screenshot": user_img,
-                        "score": None,
-                        "details": {"message": "Similarity analysis failed for this brand."},
-                        "weights": None
-                    }
             else:
-                # If capture failed but a previously saved user image exists under a different name, try to find it
-                fallback_files = [f for f in os.listdir(USER_FOLDER) if f.lower().startswith(domain.lower())]
-                if fallback_files:
-                    fallback_path = os.path.join(USER_FOLDER, fallback_files[0])
-                    print(f"[DEBUG] Using fallback existing user image: {fallback_path}")
-                    ui_score, ui_details, ui_weights = website_similarity(ref_img, fallback_path)
-                    if ui_score is not None:
-                        return {
-                            "brand": brand_name,
-                            "reference_image": ref_img,
-                            "user_screenshot": fallback_path,
-                            "score": ui_score,
-                            "details": ui_details,
-                            "weights": ui_weights
-                        }
-                print(f"[DEBUG] Screenshot failed for '{url}'. Returning structured result.")
-                return {
-                    "brand": brand_name,
-                    "reference_image": ref_img,
-                    "user_screenshot": None,
-                    "score": None,
-                    "details": {"message": "Screenshot failed. Similarity analysis not available."},
-                    "weights": None
-                }
+                st.warning("⚠ Screenshot failed → skipping similarity analysis.")
         else:
-            # No reference image found, but still take a screenshot and return a result
-            user_img = os.path.join(USER_FOLDER, f"{domain}_user.png")
-            print(f"[DEBUG] No reference image found. Taking screenshot for user_img: {user_img}")
-            # reuse existing screenshot if present
-            if os.path.exists(user_img):
-                print(f"[DEBUG] Found existing user screenshot at {user_img}, reusing it.")
-                saved = user_img
-            else:
-                saved = capture_viewport_screenshot(url, user_img, retries=1)
-            if saved:
-                print(f"[DEBUG] Screenshot saved. Returning fallback result.")
-                return {
-                    "brand": domain,
-                    "reference_image": None,
-                    "user_screenshot": user_img,
-                    "score": None,
-                    "details": {"message": f"No reference image found for '{domain}'. Similarity analysis not available."},
-                    "weights": None
-                }
-            else:
-                # try to find any existing user image
-                fallback_files = [f for f in os.listdir(USER_FOLDER) if f.lower().startswith(domain.lower())]
-                if fallback_files:
-                    fallback_path = os.path.join(USER_FOLDER, fallback_files[0])
-                    print(f"[DEBUG] Using fallback existing user image (no ref image): {fallback_path}")
-                    return {
-                        "brand": domain,
-                        "reference_image": None,
-                        "user_screenshot": fallback_path,
-                        "score": None,
-                        "details": {"message": f"No reference image found for '{domain}'. Similarity analysis not available."},
-                        "weights": None
-                    }
-                print(f"[DEBUG] Screenshot failed for '{url}'. Returning fallback result.")
-                return {
-                    "brand": domain,
-                    "reference_image": None,
-                    "user_screenshot": None,
-                    "score": None,
-                    "details": {"message": "Screenshot failed. Similarity analysis not available."},
-                    "weights": None
-                }
+            st.warning(f"⚠ No reference found for '{domain}'.")
+
+    # --------- Show Website Similarity if available ---------
+    if ui_score is not None:
+
+        st.markdown(f"*Final Similarity Score:* {ui_score:.3f}")
+        st.json(ui_details)
+        explain_score(ui_details, ui_weights, ui_score, use_streamlit=True)
+    else:
+        st.info("ℹ Website similarity analysis not available.")
 
     # --------- Return structured result ---------
-    return {
-        "brand": brand_name,
-        "reference_image": ref_img if os.path.exists(ref_img) else None,
-        "user_screenshot": user_img if 'user_img' in locals() else None,
-        "score": ui_score,
-        "details": ui_details,
-        "weights": ui_weights
-    }
+    if ui_score is not None:
+        return {
+            "brand": brand_name,
+            "reference_image": ref_img,
+            "user_screenshot": user_img,
+            "score": ui_score,
+            "details": ui_details,
+            "weights": ui_weights
+        }
+    else:
+        return None

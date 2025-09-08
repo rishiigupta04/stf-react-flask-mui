@@ -8,18 +8,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^5.14.0",
+    "@mui/material": "^5.18.0",
+    "axios": "^1.4.0",
+    "framer-motion": "^10.18.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "axios": "^1.4.0",
-    "@mui/material": "^5.14.0",
-    "@mui/icons-material": "^5.14.0",
-    "@emotion/react": "^11.11.0",
-    "@emotion/styled": "^11.11.0",
+    "react-icons": "^5.5.0",
+    "react-spinners": "^0.17.0",
+    "react-tsparticles": "^2.12.2",
     "recharts": "^2.7.2",
-    "framer-motion": "^10.12.16"
+    "tsparticles": "^3.9.1"
   },
   "devDependencies": {
-    "vite": "^5.0.0",
-    "@vitejs/plugin-react": "^4.0.0"
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^5.0.0"
   }
 }

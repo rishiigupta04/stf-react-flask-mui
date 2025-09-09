@@ -9,7 +9,9 @@ imagehash
 pytesseract
 beautifulsoup4
 rapidfuzz
-requests
+requests+
+
+
 ollama
 matplotlib
 numpy

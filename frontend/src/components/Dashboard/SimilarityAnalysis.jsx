@@ -6,11 +6,13 @@ import {
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows'
 import CloseIcon from '@mui/icons-material/Close'
 import { motion } from 'framer-motion'
+import SimilarityExplainModal from './SimilarityExplainModal'
 
 export default function SimilarityAnalysis({ simResult, simLoading, simError }) {
   const [openImg, setOpenImg] = useState(false)
   const [imgSrc, setImgSrc] = useState('')
   const [imgCaption, setImgCaption] = useState('')
+  const [explainOpen, setExplainOpen] = useState(false);
 
   const openImage = (src, caption) => {
     setImgSrc(src)
@@ -24,11 +26,34 @@ export default function SimilarityAnalysis({ simResult, simLoading, simError }) 
   const score = result?.score ?? null
   const details = result?.details ?? {}
 
-  const level = score == null ? null : score >= 0.65 ? 'High' : score >= 0.35 ? 'Moderate' : 'Low'
-  const levelColor = level === 'High' ? 'error' : level === 'Moderate' ? 'warning' : 'success'
+  // Ensure score is a number and round to 2 decimals to avoid floating point issues
+  const numericScore = score !== null ? Number(Number(score).toFixed(2)) : null;
+
+  // Unify thresholds for level and progress bar color
+  const level = numericScore == null
+    ? null
+    : numericScore >= 0.9
+      ? 'Legit'
+      : numericScore >= 0.65
+        ? 'High'
+        : numericScore >= 0.30
+          ? 'Moderate'
+          : 'Low'
+
+  const levelColor =
+    level === 'Legit'
+      ? 'primary'
+      : level === 'High'
+        ? 'error'
+        : level === 'Moderate'
+          ? 'warning'
+          : 'success'
 
   const refSrc = result?.reference_image ? `http://localhost:5000/static/brands/${result.reference_image.split(/[/\\]/).pop()}` : null
   const userSrc = result?.user_screenshot ? `http://localhost:5000/static/user/${result.user_screenshot.split(/[/\\]/).pop()}` : null
+
+  // Debug output for troubleshooting
+  console.log('SimilarityAnalysis: numericScore', numericScore, 'level', level);
 
   return (
     <Paper
@@ -56,19 +81,26 @@ export default function SimilarityAnalysis({ simResult, simLoading, simError }) 
             Comparing submitted screenshot against known brand assets
           </Typography>
         </Box>
-        <Chip
-          icon={<CompareArrowsIcon />}
-          label={level || 'No Data'}
-          sx={{
-            background: level === 'High'
-              ? 'linear-gradient(90deg,#ff4d4d,#d32f2f)' :
-              level === 'Moderate'
-              ? 'linear-gradient(90deg,#ffb74d,#f57c00)' :
-              'linear-gradient(90deg,#4db6ac,#00796b)',
-            color: '#fff',
-            fontWeight: 600
-          }}
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Chip
+            icon={<CompareArrowsIcon />}
+            label={level || 'No Data'}
+            sx={{
+              background: level === 'Legit'
+                ? 'linear-gradient(90deg,#1976d2,#64b5f6)'
+                : level === 'High'
+                  ? 'linear-gradient(90deg,#ff4d4d,#d32f2f)'
+                  : level === 'Moderate'
+                    ? 'linear-gradient(90deg,#ffb74d,#f57c00)'
+                    : 'linear-gradient(90deg,#4db6ac,#00796b)',
+              color: '#fff',
+              fontWeight: 600
+            }}
+          />
+          <IconButton aria-label="Explain similarity analysis" onClick={() => setExplainOpen(true)} size="small" sx={{ ml: 1 }}>
+            <span style={{ fontSize: "16px" }} role="img" aria-label="info">How❓</span>
+          </IconButton>
+        </Box>
       </Box>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 2 }} />
 
@@ -77,13 +109,13 @@ export default function SimilarityAnalysis({ simResult, simLoading, simError }) 
         {simLoading && <Typography>Checking similarity...</Typography>}
         {simError && <Typography color="error">{String(simError)}</Typography>}
 
-        {score !== null && (
+        {numericScore !== null && (
           <Box>
             {/* Overall score */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
                 <Typography variant="h3" sx={{ fontWeight: 900, color: '#4db6ac' }}>
-                  {Math.round(score*100)}%
+                  {Math.round(numericScore*100)}%
                 </Typography>
                 <Typography variant="caption" sx={{ opacity: 0.75 }}>
                   Overall similarity
@@ -93,24 +125,30 @@ export default function SimilarityAnalysis({ simResult, simLoading, simError }) 
               <Box sx={{ flex: 1 }}>
                 <LinearProgress
                   variant="determinate"
-                  value={score*100}
+                  value={numericScore*100}
                   sx={{
                     height: 12,
                     borderRadius: 6,
                     background: 'rgba(255,255,255,0.05)',
                     '& .MuiLinearProgress-bar': {
-                      background: score >= 0.65 ? '#e57373' : score >= 0.35 ? '#ffb74d' : '#4db6ac'
+                      background: numericScore >= 0.9
+                        ? '#1976d2' // blue for legit
+                        : numericScore >= 0.65
+                          ? '#e57373' // red for high
+                          : numericScore >= 0.35
+                            ? '#ffb74d' // orange for moderate
+                            : '#4db6ac' // green for low
                     }
                   }}
                 />
                 <Typography variant="body2" sx={{ mt:1, opacity: 0.85 }}>
+                  {level === 'Legit' && '✅ This is likely the original brand website (very high similarity).'}
                   {level === 'High' && '⚠️ High resemblance — may be impersonating a brand.'}
                   {level === 'Moderate' && '🔶 Moderate resemblance — partial match detected.'}
                   {level === 'Low' && '✅ Low resemblance — unlikely to be impersonation.'}
                 </Typography>
               </Box>
             </Box>
-
             {/* Breakdown */}
             <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>
               Similarity Breakdown
@@ -182,8 +220,7 @@ export default function SimilarityAnalysis({ simResult, simLoading, simError }) 
                        src={userSrc}
                        alt="user"
                        onClick={() => openImage(userSrc, 'User Screenshot')}
-                     style={{ width: 220, height: 140, objectFit: 'cover', borderRadius: 12, boxShadow: '0 12px 32px rgba(2,6,23,0.5)', cursor: 'pointer' }}
-                    style={{ width: 220, height: 140, objectFit: 'cover', borderRadius: 12, boxShadow: 'none', cursor: 'pointer' }}
+                       style={{ width: 220, height: 140, objectFit: 'cover', borderRadius: 12, boxShadow: 'none', cursor: 'pointer' }}
                      />
                      <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.78 }}>
                        Submitted Page
@@ -229,6 +266,9 @@ export default function SimilarityAnalysis({ simResult, simLoading, simError }) 
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Similarity Explain Modal */}
+      <SimilarityExplainModal open={explainOpen} onClose={() => setExplainOpen(false)} />
     </Paper>
   )
 }

@@ -21,6 +21,10 @@ export default function FinalVerdict({ result, similarity }){
   const verdict = final >= 0.5 ? 'Legitimate' : 'Phishing'
   const color = final >= 0.5 ? '#4db6ac' : '#e57373'
 
+  // Format numeric final score for explicit display (decimal and percent)
+  const finalNumeric = Number(final.toFixed(3))
+  const finalPercent = Math.round(finalNumeric * 100)
+
   // Build chart data for contributions
   const data = Object.keys(scores).map((k, idx) => ({ name: k, value: (normalized[k]||0) * 100 }))
   const COLORS = ['#1976d2', '#81c784', '#ffb74d']
@@ -45,6 +49,9 @@ export default function FinalVerdict({ result, similarity }){
             <Box>
               <Typography variant="h3" sx={{ fontWeight: 900 }}>{Math.round(final*100)}%</Typography>
               <Typography variant="caption" sx={{ opacity: 0.8 }}>Overall legitimacy score</Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.85 }}>
+                Combined weighted score: {finalNumeric} ({finalPercent}%)
+              </Typography>
             </Box>
 
             <Box sx={{ width: 110, textAlign: 'right' }}>

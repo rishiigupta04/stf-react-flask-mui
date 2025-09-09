@@ -102,8 +102,8 @@ export default function Navbar() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <Button color="inherit" onClick={() => navigateTo('features')} sx={{ color: theme => theme.palette.text.primary, textTransform: 'none' }}>Features</Button>
           <Button color="inherit" onClick={() => navigateTo('how-it-works')} sx={{ color: theme => theme.palette.text.primary, textTransform: 'none' }}>How It Works</Button>
-          <Button color="inherit" onClick={() => navigateTo('demo')} sx={{ color: theme => theme.palette.text.primary, textTransform: 'none' }}>Live Demo</Button>
-          <Button variant="contained" color="primary" onClick={() => navigateTo('demo')} sx={{ ml: 1, px: 3 }}>Try Demo</Button>
+{/*           <Button color="inherit" onClick={() => navigateTo('demo')} sx={{ color: theme => theme.palette.text.primary, textTransform: 'none' }}>Live Demo</Button> */}
+          <Button variant="contained" color="primary" onClick={() => navigateTo('demo')} sx={{ ml: 1, px: 3 }}>Live Demo</Button>
 
           {/* Uncomment to restore theme toggle in the navbar */}
           {/* <IconButton onClick={toggleTheme} sx={{ color: theme => theme.palette.text.primary }} aria-label="toggle theme"> */}

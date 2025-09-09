@@ -112,84 +112,84 @@ export default function App() {
         </motion.div>
 
         {/* Demo Section */}
-        <Box id="demo" sx={{ mt: 6, borderRadius: 3 }}>
+         <Box id="demo" sx={{ mt: 6, borderRadius: 3 }}>
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={fadeInUp}
           >
-            <Paper
-              sx={{
-                p: 4,
-              background: '#0f1724',
-                color: (theme) => theme.palette.text.primary,
-              }}
-              elevation={3}
-            >
-              <Typography variant="h6" gutterBottom>
-                Live Demo — Analyze a Website
-              </Typography>
+           <Paper
+             sx={{
+               p: 4,
+             background: '#0f1724',
+               color: (theme) => theme.palette.text.primary,
+             }}
+             elevation={3}
+           >
+             <Typography variant="h6" gutterBottom>
+               Live Demo — Analyze a Website
+             </Typography>
 
-              {/* Input Form */}
-              <Box
-                component="form"
-                onSubmit={handleSubmit}
-                sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}
-              >
-                <TextField
-                  fullWidth
-                  label="Enter URL or text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  sx={{
-                    background: (theme) =>
-                      theme.palette.mode === 'dark'
-                        ? 'rgba(255,255,255,0.03)'
-                        : '#fff',
-                    input: { color: 'inherit' },
-                  }}
-                />
-                <Button variant="contained" type="submit" disabled={loading || simLoading}>
-                  Analyze
-                </Button>
-              </Box>
+             {/* Input Form */}
+             <Box
+               component="form"
+               onSubmit={handleSubmit}
+               sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}
+             >
+               <TextField
+                 fullWidth
+                 label="Enter URL or text"
+                 value={url}
+                 onChange={(e) => setUrl(e.target.value)}
+                 sx={{
+                   background: (theme) =>
+                     theme.palette.mode === 'dark'
+                       ? 'rgba(255,255,255,0.03)'
+                       : '#fff',
+                   input: { color: 'inherit' },
+                 }}
+               />
+               <Button variant="contained" type="submit" disabled={loading || simLoading}>
+                 Analyze
+               </Button>
+             </Box>
 
-              {/* Results & Feedback */}
-              <Box sx={{ mt: 3 }}>
-                {/* Loading states */}
-                {(loading || simLoading) && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <CircularProgress size={20} />
-                      <Typography>
-                        {loading ? 'Analyzing...' : 'Checking similarity...'}
-                      </Typography>
-                    </Box>
-                  </motion.div>
-                )}
+             {/* Results & Feedback */}
+             <Box sx={{ mt: 3 }}>
+               {/* Loading states */}
+               {(loading || simLoading) && (
+                 <motion.div
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   transition={{ duration: 0.4 }}
+                 >
+                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                     <CircularProgress size={20} />
+                     <Typography>
+                       {loading ? 'Analyzing...' : 'Checking similarity...'}
+                     </Typography>
+                   </Box>
+                 </motion.div>
+               )}
 
-                {/* Error states */}
-                {error && (
-                  <Typography color="error">Error: {JSON.stringify(error)}</Typography>
-                )}
-                {simError && (
-                  <Typography color="error">
-                    Similarity Error: {JSON.stringify(simError)}
-                  </Typography>
-                )}
+               {/* Error states */}
+               {error && (
+                 <Typography color="error">Error: {JSON.stringify(error)}</Typography>
+               )}
+               {simError && (
+                 <Typography color="error">
+                   Similarity Error: {JSON.stringify(simError)}
+                 </Typography>
+               )}
 
-                {/* Results Section */}
-                {result && (
-                  <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={fadeInUp}
-                  >
+               {/* Results Section */}
+               {result && (
+                 <motion.div
+                   initial="hidden"
+                   animate="visible"
+                   variants={fadeInUp}
+                 >
                     <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <Paper
                         sx={{
@@ -256,11 +256,11 @@ export default function App() {
                       </Paper>
                     </Box>
                   </motion.div>
-                )}
-              </Box>
-            </Paper>
+               )}
+             </Box>
+           </Paper>
           </motion.div>
-        </Box>
+         </Box>
       </Container>
     </>
   )
